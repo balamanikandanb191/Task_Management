@@ -31,7 +31,7 @@ exports.getUsers = async (req, res) => {
       query += ` AND u.role = 'team_member'`;
     }
     if (userRole) { query += ` AND u.role = ?`; params.push(userRole); }
-    if (search)   { query += ` AND (u.name LIKE ? OR u.email LIKE ?)`; params.push(`%${search}%`, `%${search}%`); }
+    if (search) { query += ` AND (u.name LIKE ? OR u.email LIKE ?)`; params.push(`%${search}%`, `%${search}%`); }
 
     query += ' ORDER BY u.created_at DESC';
     const [users] = await db.execute(query, params);
@@ -96,13 +96,13 @@ exports.resetPassword = async (req, res) => {
 // GET /api/users/stats (Admin dashboard counts)
 exports.getStats = async (req, res) => {
   try {
-    const [totalUsers]    = await db.execute('SELECT COUNT(*) as count FROM users');
-    const [byRole]        = await db.execute('SELECT role, COUNT(*) as count FROM users GROUP BY role');
+    const [totalUsers] = await db.execute('SELECT COUNT(*) as count FROM users');
+    const [byRole] = await db.execute('SELECT role, COUNT(*) as count FROM users GROUP BY role');
     const [totalProjects] = await db.execute('SELECT COUNT(*) as count FROM projects');
-    const [totalTasks]    = await db.execute('SELECT COUNT(*) as count FROM tasks');
+    const [totalTasks] = await db.execute('SELECT COUNT(*) as count FROM tasks');
     const [tasksByStatus] = await db.execute('SELECT status, COUNT(*) as count FROM tasks GROUP BY status');
-    
-    const [overdueTasks]  = await db.execute(
+
+    const [overdueTasks] = await db.execute(
       "SELECT COUNT(*) as count FROM tasks WHERE deadline < CURDATE() AND status != 'Completed'"
     );
 

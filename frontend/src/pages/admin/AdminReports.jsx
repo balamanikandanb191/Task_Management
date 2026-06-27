@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import StatCard from '../../components/common/StatCard';
+import ExportDropdown from '../../components/common/ExportDropdown';
 import { PieChart, Download, Filter, FileText, CheckCircle, Clock, AlertTriangle, TrendingUp, BarChart, Users, Shield } from 'lucide-react';
 
 const AdminReports = () => {
@@ -22,6 +23,25 @@ const AdminReports = () => {
     }
   };
 
+  const fetchAllTasks = async () => {
+    try {
+      const { data } = await axios.get('/api/tasks');
+      // Format data for export
+      return data.data.map(task => ({
+        Title: task.title,
+        Project: task.project_title,
+        Status: task.status,
+        Priority: task.priority,
+        Assigned_To: task.assigned_name || 'Unassigned',
+        Deadline: new Date(task.deadline).toLocaleDateString(),
+        Approval: task.approval_status
+      }));
+    } catch (err) {
+      console.error('Failed to fetch tasks for export', err);
+      return [];
+    }
+  };
+
   if (loading) return <div className="page-wrapper">Generating strategic reports...</div>;
 
   const totalTasks = stats?.totalTasks || 0;
@@ -36,10 +56,10 @@ const AdminReports = () => {
           <p style={{ color: 'var(--text-muted)' }}>Deep-dive into organizational performance and resource efficiency.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn btn-primary">
-            <Download size={18} />
-            Export Full Report
-          </button>
+          <ExportDropdown 
+            filename={`admin-full-report-${new Date().toISOString().split('T')[0]}`} 
+            onBeforeExport={fetchAllTasks} 
+          />
         </div>
       </div>
 

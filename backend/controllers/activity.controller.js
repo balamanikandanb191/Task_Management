@@ -14,9 +14,9 @@ exports.getActivity = async (req, res) => {
       WHERE 1=1
     `;
     const params = [];
-    
+
     if (role !== 'admin') {
-      query += ' AND a.user_id = ?'; 
+      query += ' AND a.user_id = ?';
       params.push(id || null);
     } else {
       if (userId && userId !== 'All Users') {
@@ -33,7 +33,7 @@ exports.getActivity = async (req, res) => {
         params.push(endDate.replace('T', ' ') + ':59');
       }
     }
-    
+
     const finalLimit = isNaN(parseInt(limit)) ? 100 : parseInt(limit);
     query += ` ORDER BY a.created_at DESC LIMIT ${finalLimit}`;
 

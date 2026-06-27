@@ -7,9 +7,9 @@ import Badge from '../../components/common/Badge';
 import ProgressBar from '../../components/common/ProgressBar';
 import { useAuth } from '../../context/AuthContext';
 import { getUrgencyInfo } from '../../utils/urgency';
-import { 
-  Briefcase, Layers, CheckSquare, Plus, 
-  ExternalLink, Calendar, TrendingUp, Activity, 
+import {
+  Briefcase, Layers, CheckSquare, Plus,
+  ExternalLink, Calendar, TrendingUp, Activity,
   Clock, Bell, User, ArrowUpRight, MessageSquare,
   ShieldCheck, AlertTriangle
 } from 'lucide-react';
@@ -64,7 +64,34 @@ const PMDashboard = () => {
     completed: data.projects.filter(p => p.status === 'completed').length,
     health: Math.round((data.projects.filter(p => p.progress > 60).length / (data.projects.length || 1)) * 100),
     pendingTasks: data.tasks.filter(t => t.approval_status === 'pending_review').length,
-    approvedTasks: data.tasks.filter(t => t.approval_status === 'approved').length
+    approvedTasks: data.tasks.filter(t => t.approval_status === 'approved').length,
+    overdueTasks: data.tasks.filter(t => {
+      if (t.status === 'Completed' || !t.deadline) return false;
+      const d = new Date(t.deadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0);
+      return d < today;
+    }).length,
+    overdueProjects: data.projects.filter(p => {
+      if (p.status === 'completed' || !p.deadline) return false;
+      const d = new Date(p.deadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0);
+      return d < today;
+    }).length,
+    criticalRisks: data.tasks.filter(t => {
+      if (t.status === 'Completed' || !t.deadline) return false;
+      const d = new Date(t.deadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0);
+      const soon = new Date();
+      soon.setDate(today.getDate() + 2);
+      soon.setHours(0, 0, 0, 0);
+      return t.priority === 'High' && (d <= soon);
+    }).length
   };
 
   return (
@@ -104,31 +131,34 @@ const PMDashboard = () => {
       </div>
 
       {/* Primary Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '3rem' }}>
         <StatCard title="Active Projects" value={stats.active} icon={<Layers />} color="#7c3aed" />
         <StatCard title="Completed Tasks" value={stats.approvedTasks} icon={<CheckSquare />} color="#10b981" />
-        <StatCard title="Waiting for Approval" value={stats.pendingTasks} icon={<ShieldCheck />} color="#2563eb" />
-        <StatCard title="Project Progress" value={`${stats.health}%`} icon={<TrendingUp />} color="#06b6d4" />
+        <StatCard title="Waiting Approval" value={stats.pendingTasks} icon={<ShieldCheck />} color="#2563eb" />
+        <StatCard title="Critical Risks" value={stats.criticalRisks} icon={<AlertTriangle />} color="#f59e0b" />
+        <StatCard title="Overdue Projects" value={stats.overdueProjects} icon={<Briefcase />} color="#f43f5e" />
+        <StatCard title="Overdue Tasks" value={stats.overdueTasks} icon={<Clock />} color="#ef4444" />
+        <StatCard title="Progress" value={`${stats.health}%`} icon={<TrendingUp />} color="#06b6d4" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '2rem' }}>
-        
+
         {/* Project Velocity Monitor */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem' }}>
             <h3 style={{ fontSize: '1.5rem', fontWeight: 950, letterSpacing: '-0.5px' }}>Project List</h3>
             <button className="btn" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }} onClick={() => navigate('/pm/projects')}>View All</button>
           </div>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {data.projects.slice(0, 4).map(project => {
               const urgency = getUrgencyInfo(project.deadline);
               const isCompleted = project.status === 'completed';
               return (
-                <motion.div 
-                  key={project.id} 
-                  className={`card glass-hover ${isCompleted ? 'card-success' : ''}`} 
-                  style={{ padding: '1.75rem', borderRadius: '24px', position: 'relative', overflow: 'hidden' }} 
+                <motion.div
+                  key={project.id}
+                  className={`card glass-hover ${isCompleted ? 'card-success' : ''}`}
+                  style={{ padding: '1.75rem', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}
                   whileHover={{ scale: 1.01 }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -144,7 +174,7 @@ const PMDashboard = () => {
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>COMPLETION</div>
                     </div>
                   </div>
-                  
+
                   <div style={{ marginBottom: '1.5rem' }}>
                     <ProgressBar progress={project.progress} color={isCompleted ? 'var(--success)' : urgency.color} />
                   </div>
@@ -167,7 +197,7 @@ const PMDashboard = () => {
 
         {/* Updates Sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          
+
           {/* Operations Activity */}
           <div className="card" style={{ padding: '2rem', borderRadius: '32px', minHeight: '400px' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '1.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -198,7 +228,7 @@ const PMDashboard = () => {
               <p style={{ fontSize: '0.85rem', opacity: 0.8, lineHeight: 1.6, marginBottom: '1.5rem' }}>
                 You have <span style={{ fontWeight: 900, color: '#facc15' }}>{stats.pendingTasks} tasks</span> waiting for approval.
               </p>
-              <button 
+              <button
                 onClick={() => navigate('/pm/tasks')}
                 style={{ width: '100%', padding: '0.85rem', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}

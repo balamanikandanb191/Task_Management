@@ -7,6 +7,7 @@ import {
   CheckCircle2, AlertCircle, Clock
 } from 'lucide-react';
 import StatCard from '../../components/common/StatCard';
+import ExportDropdown from '../../components/common/ExportDropdown';
 
 const PMReports = () => {
   const [reportData, setReportData] = useState({
@@ -39,6 +40,18 @@ const PMReports = () => {
     }
   };
 
+  const getExportData = () => {
+    return reportData.tasks.map(task => ({
+      Title: task.title,
+      Project: task.project_title,
+      Status: task.status,
+      Priority: task.priority,
+      Assigned_To: task.assigned_name || 'Unassigned',
+      Deadline: task.deadline ? new Date(task.deadline).toLocaleDateString() : 'N/A',
+      Approval: task.approval_status
+    }));
+  };
+
   if (reportData.loading) return (
     <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="pulse-animation" style={{ fontWeight: 800, color: 'var(--primary)' }}>LOADING REPORTS...</div>
@@ -59,9 +72,10 @@ const PMReports = () => {
           <h1 style={{ fontSize: '2.5rem', fontWeight: 950, letterSpacing: '-1.5px' }}>Performance Reports</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '0.5rem' }}>View data and progress for all projects.</p>
         </div>
-        <button className="btn btn-primary" style={{ display: 'flex', gap: '0.75rem', fontWeight: 800, padding: '1rem 1.75rem', borderRadius: '16px' }}>
-          <Download size={20} /> Download Report
-        </button>
+        <ExportDropdown 
+          filename={`pm-performance-report-${new Date().toISOString().split('T')[0]}`} 
+          onBeforeExport={getExportData} 
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
