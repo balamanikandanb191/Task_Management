@@ -9,7 +9,7 @@ import AppRoutes from './routes/AppRoutes';
 
 function App() {
   return (
-    <BrowserRouter basename="/Task_Management/">
+    <BrowserRouter>
       <ToastProvider>
         <CompletionProvider>
           <AuthProvider>
